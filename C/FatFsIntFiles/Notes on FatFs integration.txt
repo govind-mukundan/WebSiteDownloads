@@ -1,0 +1,33 @@
+
+// Microchip FSIO library requires the following APIs to access the Disk whether its an SD card (SPI) or USB MSD device (USB)
+// So for the FAT file system the underlying HW could be USB disk or SD card, there is no dependency.
+// Its this layer that has to switch for a device that is using both sdcard and USB simultaneously
+// For usb device, the usb_device_function directly interfaces to Diskio routines
+
+#define MDD_MediaInitialize        MDD_SDSPI_MediaInitialize
+#define MDD_MediaDetect            MDD_SDSPI_MediaDetect
+#define MDD_SectorRead             MDD_SDSPI_SectorRead
+#define MDD_SectorWrite            MDD_SDSPI_SectorWrite
+#define MDD_InitIO                 MDD_SDSPI_InitIO
+#define MDD_ShutdownMedia          MDD_SDSPI_ShutdownMedia
+#define MDD_WriteProtectState      MDD_SDSPI_WriteProtectState
+
+switch (drv)
+{
+case C_DRIVE_SDCARD:
+
+
+    break;
+
+
+case C_DRIVE_USB:
+
+
+    break;
+
+
+default:
+    return STA_NOINIT; /* Unsupported drive */
+    break;
+
+}
