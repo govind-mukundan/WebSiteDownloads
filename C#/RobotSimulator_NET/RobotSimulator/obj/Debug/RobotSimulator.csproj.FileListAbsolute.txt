@@ -1,0 +1,9 @@
+D:\Freelance\Website\WebSiteDownloads\C#\RobotSimulator_NET\RobotSimulator\bin\Debug\RobotSimulator.exe.config
+D:\Freelance\Website\WebSiteDownloads\C#\RobotSimulator_NET\RobotSimulator\bin\Debug\RobotSimulator.exe
+D:\Freelance\Website\WebSiteDownloads\C#\RobotSimulator_NET\RobotSimulator\bin\Debug\RobotSimulator.pdb
+D:\Freelance\Website\WebSiteDownloads\C#\RobotSimulator_NET\RobotSimulator\obj\Debug\RobotSimulator.csprojResolveAssemblyReference.cache
+D:\Freelance\Website\WebSiteDownloads\C#\RobotSimulator_NET\RobotSimulator\obj\Debug\RobotSimulator.Form1.resources
+D:\Freelance\Website\WebSiteDownloads\C#\RobotSimulator_NET\RobotSimulator\obj\Debug\RobotSimulator.Properties.Resources.resources
+D:\Freelance\Website\WebSiteDownloads\C#\RobotSimulator_NET\RobotSimulator\obj\Debug\RobotSimulator.csproj.GenerateResource.Cache
+D:\Freelance\Website\WebSiteDownloads\C#\RobotSimulator_NET\RobotSimulator\obj\Debug\RobotSimulator.exe
+D:\Freelance\Website\WebSiteDownloads\C#\RobotSimulator_NET\RobotSimulator\obj\Debug\RobotSimulator.pdb

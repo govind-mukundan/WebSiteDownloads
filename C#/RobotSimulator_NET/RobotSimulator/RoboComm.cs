@@ -17,9 +17,11 @@ namespace RobotSimulator
         // Synchronous delegates
         public delegate void dataReceivedHandler(byte[] array);
         public dataReceivedHandler dataReceivedDelegate;
-        // Asynchronous delegates
+        // Asynchronous delegates using Begin/End Invoke - Obsolete
         public delegate bool asyncDataProcessHandler(byte[] array);
         public asyncDataProcessHandler asyncDataProcessDelegate;
+        // Asynchronous delegate using TPL and await
+        public Func<byte[], Task<bool>> asyncTplDataReceivedDelegate;
 
         public RoboComm()
         {
@@ -27,7 +29,7 @@ namespace RobotSimulator
             StartCommThread(); // Start Communicating
         }
 
-        private void OnTimeElapsed(object source, ElapsedEventArgs e)
+        async private void OnTimeElapsed(object source, ElapsedEventArgs e)
         {
             Console.WriteLine("ChildThread:The Elapsed event was raised at {0}", e.SignalTime);
 
@@ -37,6 +39,34 @@ namespace RobotSimulator
                 dataReceivedDelegate(test);
             }
 
+            // Call backs using TPL
+            if (asyncTplDataReceivedDelegate != null)
+            {
+                byte[] test = { 1, 2, 3, 4 };
+                Task<bool> task = Task.Run(() => 
+                {
+                    return (asyncTplDataReceivedDelegate(test));
+                });
+
+                // This callback will execute once the task completes
+                task.ContinueWith(_ => 
+                {
+                    Console.WriteLine(" The result in TPL callback is: {0}.", task.Result);
+                });
+            }
+
+            // Another way using TPL and await keyword
+            if (asyncTplDataReceivedDelegate != null)
+            {
+                byte[] test = { 1, 2, 3, 4 };
+
+                // Pass the delegate as a task to the system and await the result
+                bool awaited_result = await asyncTplDataReceivedDelegate(test);
+                // Control will come here only after the asyncTplDataReceivedDelegate returns
+                Console.WriteLine("Awaited result = " + awaited_result.ToString());
+            }
+
+            // Obsolete way of being asynchronous using BeginInvoke/EndInvoke
             if (asyncDataProcessDelegate != null)
             {
                 byte[] test = { 1, 2, 3, 4 };
@@ -44,7 +74,7 @@ namespace RobotSimulator
                 IAsyncResult iar = asyncDataProcessDelegate.BeginInvoke(test, null, null); // Start async
                 while (!iar.IsCompleted)
                 {
-                    Console.WriteLine("Doing stuff");
+                    Console.Write(".");
                 }
                 bool result = asyncDataProcessDelegate.EndInvoke(iar); // Wait for end and get result
                 Console.WriteLine("After EndInvoke: {0}", result);
@@ -55,6 +85,7 @@ namespace RobotSimulator
 
             }
         }
+
 
         void DelegateExOverCb(IAsyncResult iar)
         {
@@ -74,5 +105,18 @@ namespace RobotSimulator
             RoboCommTimer.Elapsed += new ElapsedEventHandler(OnTimeElapsed);
             RoboCommTimer.Enabled = true;
         }
+
+
+        #region TAP based solution
+        async public Task<byte[]> ReadBytesFromRobotAsync()
+        {
+        TaskCompletionSource<byte[]> dataRxTcs = new TaskCompletionSource<byte[]>();
+        Console.WriteLine("Awaiting begins ...");
+        await Task.Delay(C_COMM_INTERVAL).ContinueWith(_ => { dataRxTcs.SetResult(new byte[] { 3, 4, 5, 6, 7 }); });
+        Console.WriteLine("Awaiting ends ...");
+        return dataRxTcs.Task.Result;
+        }
+        #endregion
+
     }
 }
