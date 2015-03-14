@@ -1,0 +1,34 @@
+﻿<Window x:Class="SharpGLWPFPlot.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ports="clr-namespace:System.IO.Ports;assembly=System"
+        Title="OpenGL Plotter" Height="634" Width="1067" 
+        xmlns:sharpGL="clr-namespace:SharpGL.WPF;assembly=SharpGL.WPF"
+        Icon="1425972558_60814.ico"
+        Closed="Window_Closed">
+    <Window.Resources>
+        <ObjectDataProvider ObjectType="{x:Type ports:SerialPort}" MethodName="GetPortNames" x:Key="portNames"/>
+    </Window.Resources>
+    <Grid>
+        <!-- The OpenGL control provides a OpenGL drawing surface. -->
+        <sharpGL:OpenGLControl 
+            Name="openGLControl" OpenGLDraw="openGLControl_OpenGLDraw" 
+            OpenGLInitialized="openGLControl_OpenGLInitialized" Resized="openGLControl_Resized" RenderContextType="FBO" FrameRate="20" DrawFPS="True" Background="Black" Margin="0,95,0,0"/>
+        <Grid HorizontalAlignment="Left" Height="85" Margin="10,10,0,0" VerticalAlignment="Top" Width="302">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Content="_Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Width="98" Click="btnConnect_Click" x:Name="btnConnect" Grid.Column="2"/>
+            <ComboBox HorizontalAlignment="Left" VerticalAlignment="Top" Width="92" ItemsSource="{Binding Source={StaticResource portNames}}" SelectedIndex="0" x:Name="cmbxPorts" Grid.Column="1" Grid.Row="0" RenderTransformOrigin="-1.033,0.455"/>
+            <Button Content="_Start" HorizontalAlignment="Left" Grid.Row="1" VerticalAlignment="Top" Width="293" Click="btnStart_Click" x:Name="btnStartStop" IsEnabled="False" Height="44" Grid.ColumnSpan="3"/>
+            <Label Content="Select COM Port" HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Width="100" Grid.Column="0" Grid.Row="0"/>
+        </Grid>
+        <CheckBox Content="Simulate" HorizontalAlignment="Left" Margin="329,13,0,0" VerticalAlignment="Top" Name="cbSimulate" Click="cbSimulate_Click"/>
+    </Grid>
+</Window>
