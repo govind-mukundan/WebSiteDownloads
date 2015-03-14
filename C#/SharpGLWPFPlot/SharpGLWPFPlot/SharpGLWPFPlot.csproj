@@ -80,7 +80,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ECG.cs" />
     <Compile Include="SerialPortAdapter.cs" />
     <Compile Include="SharpGLEx.cs" />
     <Page Include="MainWindow.xaml">
