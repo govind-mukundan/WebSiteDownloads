@@ -15,14 +15,9 @@
 //-----------------------------------------------------------------------------
 
 
-//#include "C:\Microchip\Microchip\MPLAB C30\support\PIC24F\hp24FJ256GB106.h"
 #include "GenericTypeDefs.h"
-#include "Compiler.h"
-#include "HardwareProfile.h"
+#include "HMain.h"
 #include "drvI2C.h"
-#include "uart2.h"
-#define USE_AND_OR
-#include <i2c.h>
 
 
 #define I2C_DEBUG 0
@@ -48,10 +43,9 @@ void drvI2CRelease(void) {
 
 void drvI2CInit(void) {
     UINT16 temp = 0;
-    DelayMs(100);
     CPI2CCON = 0; // reset bits to 0
     CPCONbits.I2CEN = 0; // disable module
-    CPI2CBRG = (SSMGetCurrentPeripheralClock() / FCL) - (SSMGetCurrentPeripheralClock() / 10000000) - 1; //Formula from datasheet
+    CPI2CBRG = (GetPeripheralClock() / FCL) - (GetPeripheralClock() / 10000000) - 1; //Formula from datasheet
     //CPI2CBRG = ((SSMGetCurrentPeripheralClock() / (2 * Fsck)) - 1);
     CPI2CSTAT = 0;
     CPCONbits.I2CSIDL = 1; // dont operate in idle mode
