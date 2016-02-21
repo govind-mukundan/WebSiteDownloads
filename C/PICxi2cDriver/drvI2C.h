@@ -25,22 +25,9 @@
 #define C_CP_WRITE  0xA0
 
 
-
-BOOL PutAppleCPToSleep(void);
 void drvI2CInit(void);
-
-
-
-
-
-
-void drvI2CReset(void);
-BOOL drvI2CReadRegister(UINT8 reg, UINT8* rxPtr);
-BOOL CPWriteReg( UINT8 reg, UINT8 data);
-BOOL CPWriteRegLoop( UINT8 reg, UINT8* data, UINT8 len, UINT8 slave_adr);
 BOOL drvI2CReadRegisters(UINT8 reg, UINT8* rxPtr, UINT8 len, UINT8 slave_adr);
-void drvI2CDisable(void);
 BOOL drvI2CWriteRegisters(UINT8 reg, UINT8* data, UINT8 len, UINT8 slave_adr);
 BOOL drvI2CWriteByte(UINT8 reg, UINT8 byte, UINT8 slave_adr );
-BOOL PutAppleCPToSleep(void);
+
 #endif
