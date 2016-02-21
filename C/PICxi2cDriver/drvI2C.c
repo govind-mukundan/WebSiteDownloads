@@ -16,7 +16,6 @@
 
 
 #include "GenericTypeDefs.h"
-#include "HMain.h"
 #include "drvI2C.h"
 
 
