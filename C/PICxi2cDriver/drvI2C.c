@@ -9,7 +9,7 @@
 //
 //  Version : 1.0
 //  Date :
-//  Description: Initial version for use with E100L RTC / EEPROM
+//  Description: Initial version
 //
 //
 //-----------------------------------------------------------------------------
@@ -17,125 +17,121 @@
 
 #include "GenericTypeDefs.h"
 #include "drvI2C.h"
+#if(I2C_DEBUG == 1)
+#include "uart2.h"    
+#endif
 
 
-#define I2C_DEBUG 0
-#define FCL        400000 // Check the max speed supported by your peripheral!!
-#define FCL_2_0B   40000
+static void I2CIdle(void);
+static BOOL I2CStart(void);
+static void I2CIdle(void);
+static void I2CStop(void);
+static BOOL I2CSendByte(BYTE data);
 
-static BOOL I2CLocked; // Variable to keep track of the initialization. When MFI library takes control of I2C, its not available for EEPROM and RTC
-static void CPI2CIdle(void);
-static BOOL CPI2CStart(void);
-static void CPI2CIdle(void);
-static void CPI2CStop(void);
-static BOOL CPI2CSendByte(BYTE data);
-
-// Any other module taking control of the i2c pins must lock it to prevent conflicts with this driver
-
-void drvI2CLock(void) {
-    I2CLocked = TRUE;
-}
-
-void drvI2CRelease(void) {
-    I2CLocked = FALSE;
-}
 
 void drvI2CInit(void) {
     UINT16 temp = 0;
-    CPI2CCON = 0; // reset bits to 0
-    CPCONbits.I2CEN = 0; // disable module
-    CPI2CBRG = (GetPeripheralClock() / FCL) - (GetPeripheralClock() / 10000000) - 1; //Formula from datasheet
-    //CPI2CBRG = ((SSMGetCurrentPeripheralClock() / (2 * Fsck)) - 1);
-    CPI2CSTAT = 0;
-    CPCONbits.I2CSIDL = 1; // dont operate in idle mode
-    //CPCONbits.SCLREL = 1;
-    CPCONbits.I2CEN = 1; // enable module
-    temp = CPI2CRCV; // clear RBF flag
+    I2CCON = 0; // reset bits to 0
+    I2CCONbits.I2CEN = 0; // disable module
+    I2CBRG = (GetPeripheralClock() / FCL) - (GetPeripheralClock() / 10000000) - 1; //Formula from datasheet
+    //I2CBRG = ((SSMGetCurrentPeripheralClock() / (2 * Fsck)) - 1);
+    I2CSTAT = 0;
+    I2CCONbits.I2CSIDL = 1; // dont operate in idle mode
+    //I2CCONbits.SCLREL = 1;
+    I2CCONbits.I2CEN = 1; // enable module
+    temp = I2CRCV; // clear RBF flag
+#if(I2C_DEBUG == 1)
     UART2PrintString("Configured i2c1\n");
-    I2CLocked = FALSE;
+#endif
 
 }
 
 
 
-static void CPI2CIdle(void) {
+static void I2CIdle(void) {
     UINT8 t = 255;
     /* Wait until I2C Bus is Inactive */
-    while (CPCONbits.SEN || CPCONbits.PEN || CPCONbits.RCEN ||
-            CPCONbits.RSEN || CPCONbits.ACKEN || CPSTATbits.TRSTAT || t--);
+    while (I2CCONbits.SEN || I2CCONbits.PEN || I2CCONbits.RCEN ||
+            I2CCONbits.RSEN || I2CCONbits.ACKEN || I2CSTATbits.TRSTAT || t--);
 }
 
-static BOOL CPI2CStart(void) {
+static BOOL I2CStart(void) {
     // wait for module idle
-    CPI2CIdle();
+    I2CIdle();
     // Enable the Start condition
-    CPCONbits.SEN = 1;
+    I2CCONbits.SEN = 1;
 
 
     // Check for collisions
-    if (CPSTATbits.BCL) {
+    if (I2CSTATbits.BCL) {
+#if(I2C_DEBUG == 1)
         UART2PrintString("I2C Start Cond Error! \r\n");
         UART2PrintString("CON\n");
-        UART2PutHexWord(CPI2CCON);
+        UART2PutHexWord(I2CCON);
 
         UART2PrintString("STAT\n");
-        UART2PutHexWord(CPI2CSTAT);
+        UART2PutHexWord(I2CSTAT);
+#endif
         return (FALSE);
     } else {
         // wait for module idle
-        CPI2CIdle();
+        I2CIdle();
         return (TRUE);
     }
 }
 
-static void CPI2CStop(void) {
+static void I2CStop(void) {
     int x = 0;
     // wait for module idle
-    CPI2CIdle();
+    I2CIdle();
     //initiate stop bit
-    CPCONbits.PEN = 1;
+    I2CCONbits.PEN = 1;
 
     //wait for hardware clear of stop bit
-    while (CPCONbits.PEN) {
+    while (I2CCONbits.PEN) {
         Delay10us(1);
         x++;
         if (x > 1) break;
     }
-    CPCONbits.RCEN = 0;
+    I2CCONbits.RCEN = 0;
     // IFS1bits.MI2C1IF = 0; // Clear Interrupt
-    CPSTATbits.IWCOL = 0;
-    CPSTATbits.BCL = 0;
+    I2CSTATbits.IWCOL = 0;
+    I2CSTATbits.BCL = 0;
     // wait for module idle
-    CPI2CIdle();
+    I2CIdle();
 }
 
-static BOOL CPI2CSendByte(BYTE data) {
-    //while(CPSTATbits.TBF); //Wait till data is transmitted.
+static BOOL I2CSendByte(BYTE data) {
+    //while(I2CSTATbits.TBF); //Wait till data is transmitted.
     // Send the byte
-    CPI2CTRN = data;
+    I2CTRN = data;
 
     // Check for collisions
-    if ((CPSTATbits.IWCOL == 1)) {
+    if ((I2CSTATbits.IWCOL == 1)) {
+#if(I2C_DEBUG == 1)
         UART2PrintString("IWOCL \n");
         UART2PrintString("CON\n");
-        UART2PutHexWord(CPI2CCON);
+        UART2PutHexWord(I2CCON);
 
         UART2PrintString("STAT\n");
-        UART2PutHexWord(CPI2CSTAT);
+        UART2PutHexWord(I2CSTAT);
+#endif
         return (FALSE);
     } else {
-        while (CPSTATbits.TRSTAT); // wait until write cycle is complete
-        if ((CPSTATbits.BCL == 1)) {
+        while (I2CSTATbits.TRSTAT); // wait until write cycle is complete
+        if ((I2CSTATbits.BCL == 1)) {
+#if(I2C_DEBUG == 1)
             UART2PrintString("I2C Tx Error!\n");
             UART2PrintString("CON\n");
-            UART2PutHexWord(CPI2CCON);
+            UART2PutHexWord(I2CCON);
 
             UART2PrintString("STAT\n");
-            UART2PutHexWord(CPI2CSTAT);
+            UART2PutHexWord(I2CSTAT);
+#endif
             return (FALSE);
         } else {
             // wait for module idle
-            CPI2CIdle();
+            I2CIdle();
             return (TRUE);
         }
     }
@@ -164,70 +160,75 @@ BOOL drvI2CReadRegisters(UINT8 reg, UINT8* rxPtr, UINT8 len, UINT8 slave_adr) {
     UART2PutHex(reg);
     UART2PrintString("\r\n");
 #endif
-    if (I2CLocked) return FALSE;
     for (i = 0; i < 100; i++) // wait for ACK for some time
     {
         //1. i2c start
-        CPI2CStart();
+        I2CStart();
         //2. Set Slave in W Mode
-        CPI2CSendByte((slave_adr << 1) | 0);
+        I2CSendByte((slave_adr << 1) | 0);
         //3. Check ACK
-        CPI2CIdle();
-        if (CPSTATbits.ACKSTAT == 0) // Did we receive an ACK ?
+        I2CIdle();
+        if (I2CSTATbits.ACKSTAT == 0) // Did we receive an ACK ?
         {
             flag = 1;
             break;
         }
+#if(I2C_DEBUG == 1)
         UART2PutChar('.');
+#endif
     }
 
     if (!flag) return FALSE; // Exit if there was a problem
     flag = 0;
     // 4.if write cmd was successful, put the regno on the bus
-    CPI2CSendByte(reg);
-    if (CPSTATbits.ACKSTAT != 0) // Did we receive an ACK ?
+    I2CSendByte(reg);
+    if (I2CSTATbits.ACKSTAT != 0) // Did we receive an ACK ?
     {
+#if(I2C_DEBUG == 1)
         UART2PrintString("Error NACK Rxed\n");
+#endif
         return FALSE; // Exit if there was a problem
     }
     // Now that the register addres is setup, we can ask the slave to enter read mode.
     for (j = 0; j < 100; j++) {
         //5.Issue a repeated start = a start cond without a prior stop
-        CPI2CStart();
+        I2CStart();
         //6. Set Slave in R mode
-        CPI2CSendByte((slave_adr << 1) | 1);
+        I2CSendByte((slave_adr << 1) | 1);
         //7. Check ACK
-        if (CPSTATbits.ACKSTAT == 0) // Did we receive an ACK ?
+        if (I2CSTATbits.ACKSTAT == 0) // Did we receive an ACK ?
         {
             flag = 1;
             break;
         }
+#if(I2C_DEBUG == 1)
         UART2PutChar('.');
+#endif
     }
 
     if (!flag) return FALSE; // Exit if there was a problem
 
     for (i = 0; i < len; i++) //read all the bytes
     {
-        CPI2CIdle();
+        I2CIdle();
         // got the ack, processor is in read mode
         //8. read the register
-        CPCONbits.RCEN = 1; // enable master read
-        while (CPCONbits.RCEN); // wait for byte to be received !(CPSTATbits.RBF)
+        I2CCONbits.RCEN = 1; // enable master read
+        while (I2CCONbits.RCEN); // wait for byte to be received !(I2CSTATbits.RBF)
 
-        CPI2CIdle();
-        CPSTATbits.I2COV = 0;
-        *(rxPtr + i) = CPI2CRCV;
+        I2CIdle();
+        I2CSTATbits.I2COV = 0;
+        *(rxPtr + i) = I2CRCV;
 
         if ((i + 1) == len) {
             //9. Generate a NACK on last byte
-            CPCONbits.ACKDT = 1; // send nack
-            CPCONbits.ACKEN = 1;
+            I2CCONbits.ACKDT = 1; // send nack
+            I2CCONbits.ACKEN = 1;
             //10. generate a stop
-            CPI2CStop();
+            I2CStop();
         } else {
-            CPCONbits.ACKDT = 0; // send ACK for sequential reads
-            CPCONbits.ACKEN = 1;
+            I2CCONbits.ACKDT = 0; // send ACK for sequential reads
+            I2CCONbits.ACKEN = 1;
         }
 
         ret = TRUE;
@@ -258,36 +259,39 @@ BOOL drvI2CReadRegisters(UINT8 reg, UINT8* rxPtr, UINT8 len, UINT8 slave_adr) {
 BOOL drvI2CWriteRegisters(UINT8 adr, UINT8* data, UINT8 len, UINT8 slave_adr) {
     UINT8 i, flag, j;
     flag = 0;
-    if (I2CLocked) return FALSE;
     for (i = 0; i < 100; i++) {
         //1. i2c start
-        CPI2CStart();
-        //2. Set CP in W Mode
-        CPI2CSendByte((slave_adr << 1) | 0);
+        I2CStart();
+        //2. Set  in W Mode
+        I2CSendByte((slave_adr << 1) | 0);
         //3. Check ACK
-        CPI2CIdle();
-        if (CPSTATbits.ACKSTAT == 0) // Did we receive an ACK ?
+        I2CIdle();
+        if (I2CSTATbits.ACKSTAT == 0) // Did we receive an ACK ?
         {
             flag = 1;
             break;
         }
+#if(I2C_DEBUG == 1)
         UART2PutChar('.');
+#endif
     }
 
     if (!flag) return (FALSE); // Exit if there was a problem
     // 4.if write cmd was successful, put the adress on the bus
-    CPI2CSendByte(adr);
-    CPI2CIdle();
+    I2CSendByte(adr);
+    I2CIdle();
     for (j = 0; j < len; j++) {
-        if (CPSTATbits.ACKSTAT == 0) // Did we receive an ACK ?
+        if (I2CSTATbits.ACKSTAT == 0) // Did we receive an ACK ?
         {
-            CPI2CSendByte(*(data + j));
+            I2CSendByte(*(data + j));
         } else {
+#if(I2C_DEBUG == 1)
             UART2PrintString("Error NACK Rxed\n");
+#endif
             return FALSE;
         }
     }
-    CPI2CStop();
+    I2CStop();
 
     return TRUE;
 
