@@ -2,6 +2,9 @@
 #ifndef DRVI2C_H
 #define DRVI2C_H
 
+// HardwareProfile includes the register definitions via <p24fxxxx.h> for PIC24..
+#include "HardwareProfile.h"
+
 // Change below defines to I2C2xxx if using I2C2
 #define I2CCON        I2C1CON
 #define I2CCONbits    I2C1CONbits
