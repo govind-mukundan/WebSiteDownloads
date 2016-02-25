@@ -89,9 +89,7 @@ static void I2CStop(void) {
 
     //wait for hardware clear of stop bit
     while (I2CCONbits.PEN) {
-        Delay10us(1);
-        x++;
-        if (x > 1) break;
+        if (x++ > 50) break;
     }
     I2CCONbits.RCEN = 0;
     // IFS1bits.MI2C1IF = 0; // Clear Interrupt
