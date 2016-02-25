@@ -1,8 +1,10 @@
 
+#ifndef _HARDWARE_PROFILE_H_
+#define _HARDWARE_PROFILE_H_
 
 // A simplified version of HardwareProfile.h containing only those definitions used by i2c drivers [PIC24/32]
 
-if defined(__dsPIC33F__) || defined(__PIC24F__) || defined(__PIC24FK__) || defined(__PIC24H__)
+#if defined(__dsPIC33F__) || defined(__PIC24F__) || defined(__PIC24FK__) || defined(__PIC24H__)
 #include <p24fxxxx.h>
 
 #define GetSystemClock()                   32000000UL       // define the system clock appropriately!
@@ -16,5 +18,7 @@ if defined(__dsPIC33F__) || defined(__PIC24F__) || defined(__PIC24FK__) || defin
 #define GetSystemClock()        (80000000ul)
 #define GetPeripheralClock()    (GetSystemClock() / (1 << OSCCONbits.PBDIV))
 #define GetInstructionClock()   (GetSystemClock())
+
+#endif
 
 #endif
