@@ -169,6 +169,8 @@ namespace SharpGLWPFPlot
                         int count = _serialPort.Read(readBuffer, 0, _serialPort.ReadBufferSize);
                         // Now that we have some data, dump it into the buffer and analyze it
                         BlockCopyToCircularBuffer(readBuffer, _dataBuffer, _buffHead & (BUFF_SIZE - 1), BUFF_SIZE, count);
+                        _buffHead += count;
+                        //Debug.WriteLine(count.ToString());
                         if (count > 0)
                         {
                             if (SerialDataRxedHandler != null)
@@ -272,7 +274,7 @@ namespace SharpGLWPFPlot
 
             byte[] readBuffer = new byte[_serialPort.ReadBufferSize];
 
-            while (_keepReading)
+            while (_keepReading && !_cts.IsCancellationRequested)
             {
                 if (_serialPort.IsOpen)
                 {
